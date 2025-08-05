@@ -1,68 +1,54 @@
-# Pico TinyUSB Keyboard
+# Pico Keypad
 
-USB HID Keyboard for Pico RP2040 with TinyUSB.
+A USB HID Keypad for the Pico RP2040 using TinyUSB and the C/C++ SDK.
 
-This is an adapted copy of the hid_composite example from [TinyUSB](https://github.com/hathach/tinyusb/tree/master/examples/device/hid_composite) showing how to build with TinyUSB when using the Raspberry Pi Pico SDK. This repository optimizes the REPORT_ID_KEYBOARD reports.
+This project adapts the standard `hid_composite` example from TinyUSB to create a 12-key (0-9, ESC, ENTER) keypad using an efficient 4x3 button matrix. This approach reads 12 buttons using only 7 GPIO pins.
 
-## Keyboard
+## Keypad Matrix
 
-In `keyboard.h` a USB HID Keyboard report is created from pin inputs on the Pico. 
+The keypad logic is defined in `key_matrix.h`. The project reads a 4x3 matrix of buttons and translates them into standard USB HID keypresses.
 
-Connect pico gpio pins to usb hid keyboard keys:
+### Pinout
 
-```c
-const static int num_pins = 11;
-const PinKey pin_keys[num_pins] = { // map gpio pin to keycode
-    { 2, HID_KEY_W },
-    { 3, HID_KEY_A },
-    { 4, HID_KEY_S },
-    { 5, HID_KEY_D },
-    { 16, HID_KEY_ARROW_UP },
-    { 17, HID_KEY_ARROW_DOWN },
-    { 18, HID_KEY_ARROW_LEFT },
-    { 19, HID_KEY_ARROW_RIGHT },
-    { 20, HID_KEY_ENTER },
-    { 21, HID_KEY_SPACE },
-    { 22, HID_KEY_SHIFT_LEFT }
-};
-```
+The keypad uses 4 pins for rows and 3 pins for columns.
 
-Make sure `num_pins` is equal to the amount of pin-key combinations specified in `pin_keys`. In this case, there's 11 connected pins. Note that the pico has 26 usable gpio pins.
+*   **Rows (Outputs):** `GP12`, `GP11`, `GP10`, `GP9`
+*   **Columns (Inputs):** `GP15`, `GP14`, `GP13`
 
-A list of all the [keycodes](#hid-keycodes) are at the end of this file.
+### Key Mappings
+
+The key mapping is defined in a 2D array inside `key_matrix.h` and corresponds to the physical layout below:
+
+|                  | GP15 (Col 0) | GP14 (Col 1) | GP13 (Col 2) |
+| :--------------- | :----------: | :----------: | :----------: |
+| **GP12 (Row 0)** |      1       |      2       |      3       |
+| **GP11 (Row 1)** |      4       |      5       |      6       |
+| **GP10 (Row 2)** |      7       |      8       |      9       |
+| **GP9 (Row 3)**  |     ESC      |      0       |    ENTER     |
 
 ## Hardware
 
-The input pins use the internal pull up resistor on the pico. They read `1` when **not** pressed. Connect a pin to ground to generate a key press for that pin.
+The input pins for the matrix are configured differently from a simple button-to-ground setup. The rows act as outputs, and the columns act as inputs with internal pull-down resistors.
+
+*   **Row Pins (GP12-GP9):** Configured as outputs.
+*   **Column Pins (GP15-GP13):** Configured as inputs with internal pull-downs, meaning they read `LOW` (0) by default.
+
+When a button is pressed, it creates a connection between its corresponding row and column pin. The scanning code works by setting one row `HIGH` at a time and then reading the column pins. If a column pin also reads `HIGH`, the firmware knows that the button at that intersection is pressed.
 
 ```
-            button
-              __
-    pin -----+  +----- ground
+                  PICO
+                   |
+         +---------+---------+
+         |                   |
+Row Pin o----+----[Button]----+----o Column Pin
+(Output)     |                |    (Input w/ Pull-Down)
 ```
 
 The pins are polled once every 10ms.
 
-## Install Pico SDK
+## HID Keycodes
 
-See [Getting Started with the Raspberry Pi Pico](https://rptl.io/pico-get-started) and the README in the [pico-sdk](https://github.com/raspberrypi/pico-sdk) for information on getting up and running.
-
-If the pico-sdk is in your $PATH, you can keep this repository anywhere. Cmake will probably find it.
-
-## Compiling and uploading
-
-Insert the Pico with the BOOTSEL button pressed. After it's mounted:
-
-```bash
-./upload
-```
-
-The upload script will compile the code and upload the compiled firmware to the pico.
-
-
-## HID keycodes
-
-The HID keycodes are defined in `pico-sdk/lib/tinyusb/src/class/hid/hid.h`.
+The HID keycodes are defined in `pico-sdk/lib/tinyusb/src/class/hid/hid.h`. This list is a useful reference for customizing the key map.
 
 ```c
 //--------------------------------------------------------------------+
@@ -181,56 +167,6 @@ The HID keycodes are defined in `pico-sdk/lib/tinyusb/src/class/hid/hid.h`.
 #define HID_KEY_F22                       0x71
 #define HID_KEY_F23                       0x72
 #define HID_KEY_F24                       0x73
-#define HID_KEY_EXECUTE                   0x74
-#define HID_KEY_HELP                      0x75
-#define HID_KEY_MENU                      0x76
-#define HID_KEY_SELECT                    0x77
-#define HID_KEY_STOP                      0x78
-#define HID_KEY_AGAIN                     0x79
-#define HID_KEY_UNDO                      0x7A
-#define HID_KEY_CUT                       0x7B
-#define HID_KEY_COPY                      0x7C
-#define HID_KEY_PASTE                     0x7D
-#define HID_KEY_FIND                      0x7E
-#define HID_KEY_MUTE                      0x7F
-#define HID_KEY_VOLUME_UP                 0x80
-#define HID_KEY_VOLUME_DOWN               0x81
-#define HID_KEY_LOCKING_CAPS_LOCK         0x82
-#define HID_KEY_LOCKING_NUM_LOCK          0x83
-#define HID_KEY_LOCKING_SCROLL_LOCK       0x84
-#define HID_KEY_KEYPAD_COMMA              0x85
-#define HID_KEY_KEYPAD_EQUAL_SIGN         0x86
-#define HID_KEY_KANJI1                    0x87
-#define HID_KEY_KANJI2                    0x88
-#define HID_KEY_KANJI3                    0x89
-#define HID_KEY_KANJI4                    0x8A
-#define HID_KEY_KANJI5                    0x8B
-#define HID_KEY_KANJI6                    0x8C
-#define HID_KEY_KANJI7                    0x8D
-#define HID_KEY_KANJI8                    0x8E
-#define HID_KEY_KANJI9                    0x8F
-#define HID_KEY_LANG1                     0x90
-#define HID_KEY_LANG2                     0x91
-#define HID_KEY_LANG3                     0x92
-#define HID_KEY_LANG4                     0x93
-#define HID_KEY_LANG5                     0x94
-#define HID_KEY_LANG6                     0x95
-#define HID_KEY_LANG7                     0x96
-#define HID_KEY_LANG8                     0x97
-#define HID_KEY_LANG9                     0x98
-#define HID_KEY_ALTERNATE_ERASE           0x99
-#define HID_KEY_SYSREQ_ATTENTION          0x9A
-#define HID_KEY_CANCEL                    0x9B
-#define HID_KEY_CLEAR                     0x9C
-#define HID_KEY_PRIOR                     0x9D
-#define HID_KEY_RETURN                    0x9E
-#define HID_KEY_SEPARATOR                 0x9F
-#define HID_KEY_OUT                       0xA0
-#define HID_KEY_OPER                      0xA1
-#define HID_KEY_CLEAR_AGAIN               0xA2
-#define HID_KEY_CRSEL_PROPS               0xA3
-#define HID_KEY_EXSEL                     0xA4
-// RESERVED					                      0xA5-DF
 #define HID_KEY_CONTROL_LEFT              0xE0
 #define HID_KEY_SHIFT_LEFT                0xE1
 #define HID_KEY_ALT_LEFT                  0xE2
