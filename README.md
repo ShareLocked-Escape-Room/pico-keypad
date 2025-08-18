@@ -15,6 +15,11 @@ The keypad uses 4 pins for rows and 3 pins for columns.
 *   **Rows (Outputs):** `GP12`, `GP11`, `GP10`, `GP9`
 *   **Columns (Inputs):** `GP15`, `GP14`, `GP13`
 
+Some keypads may also use:
+
+*   **Rows (Outputs):** `GP14`, `GP9`, `GP10`, `GP12`
+*   **Columns (Inputs):** `GP13`, `GP15`, `GP11`
+
 ### Key Mappings
 
 The key mapping is defined in a 2D array inside `key_matrix.h` and corresponds to the physical layout below:
@@ -25,6 +30,16 @@ The key mapping is defined in a 2D array inside `key_matrix.h` and corresponds t
 | **GP11 (Row 1)** |      4       |      5       |      6       |
 | **GP10 (Row 2)** |      7       |      8       |      9       |
 | **GP9 (Row 3)**  |     ESC      |      0       |    ENTER     |
+
+
+or:
+
+|                  | GP13 (Col 0) | GP15 (Col 1) | GP11 (Col 2) |
+| :--------------- | :----------: | :----------: | :----------: |
+| **GP14 (Row 0)** |      1       |      2       |      3       |
+| **GP9 (Row 1)**  |      4       |      5       |      6       |
+| **GP10 (Row 2)** |      7       |      8       |      9       |
+| **GP12 (Row 3)** |     ESC      |      0       |    ENTER     |
 
 ## Hardware
 

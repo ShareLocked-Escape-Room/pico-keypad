@@ -14,6 +14,9 @@ private:
 	const uint ROW_PINS[NUM_ROWS] = {12, 11, 10, 9};
 	const uint COL_PINS[NUM_COLS] = {15, 14, 13};
 
+	// const uint ROW_PINS[NUM_ROWS] = {14, 9, 10, 12};
+	// const uint COL_PINS[NUM_COLS] = {13, 15, 11};
+
 	// Maps the physical button layout to HID keycodes
 	const uint8_t KEY_MAP[NUM_ROWS][NUM_COLS] = {
 		{HID_KEY_1, HID_KEY_2, HID_KEY_3},
